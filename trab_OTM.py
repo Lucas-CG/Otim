@@ -24,25 +24,37 @@ def grad_fB(x1, x2):
 #busca de armijo: arumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
 def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
 	t = 1
+
 	while func(x1 + t*dx1, x2 + t*dx2) > func(x1, x2) + eta*t*(grad_func(x1, x2)[0]*dx1 + grad_fA(x1, x2)[1]*dx2):
 		print (t)
 		print (func(x1 + t*dx1, x2 + t*dx2))
 		t = gamma*t
-	print(x1 + t*dx1, x2 + t*dx2)
+
 	return t
 
 
-#def gradiente(func, grad_func, x):
+#Argumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2]
+def gradiente(func, grad_func, x1, x2, dx1, dx2):
 #	k = 0
-#	x_ant = x
-#	while ((grad_func(x)!=0) || (x == x_ant)):
-#		d = -grad_func(x)
-#		t = armijo(func, x, d, grad_func)
-#		x_prox = x + t*d
+#	x1_ant = x1
+#	x2_ant = x2
+
+#	while (((grad_func(x1, x2)[0]!=0) && (grad_func(x1, x2)[1]!=0)) || ((x1 == x1_ant) && (x2 == x2_ant))):
+#		d = -grad_func(x1, x2)
+		
+#		t = armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta)
+		
+#		x1_prox = x1 + t*dx1
+#		x2_prox = x2 + t*dx2
+
 #		k = k+1
-#		x_ant = x
-#		x = x_prox
-#	return x
+
+#		x1_ant = x1
+#		x2_ant = x2
+#		x1 = x1_prox
+#		x2 = x2_prox
+
+#	return [x1, x2]
 
 
 #def newton(func, grad_func, x):
@@ -75,6 +87,8 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 #def Hk_prox(x, Hk):
 	
 
+
+
 # Teste para a funcao de armijo, tudo ok
 def teste(x1, x2):
 	return (0.5)*pow( (x1 - 2) , 2) + pow( (x2 - 1) , 2)
@@ -82,8 +96,7 @@ def teste(x1, x2):
 def grad_teste(x1, x2):
 	return [x1 - 2, 2*x2 - 2]
 
-
-armijo(teste, grad_teste, 1, 0, 3, 1, 0.8, (0.25))
+#armijo(teste, grad_teste, 1, 0, 3, 1, 0.8, (0.25))
 
 
 
