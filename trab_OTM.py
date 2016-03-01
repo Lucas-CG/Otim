@@ -19,16 +19,20 @@ def grad_fB(x1, x2):
 	return [deriv_x1, deriv_x2]
 
 
-def armijo():
-#Argumentos: funcao, ponto a ser verificado, direcao de descida, funcao gradiente
-#def gradient (func, x, d, grad):
-#	t = 1
-#	while func(x + t*d) > ( func(x) + NI*t*grad(x)*d ):
-#		t = LAMBA*t
-#	return t
-#O que é NI e LAMBDA???
+#No Python pode-se passar uma funcao como argumento para outra funcao, logo, nao precisa do if
+#Versao TESTADA E FUNCIONANDO:
+#busca de armijo: arumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
+def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
+	t = 1
+	while func(x1 + t*dx1, x2 + t*dx2) > func(x1, x2) + eta*t*(grad_func(x1, x2)[0]*dx1 + grad_fA(x1, x2)[1]*dx2):
+		print (t)
+		print (func(x1 + t*dx1, x2 + t*dx2))
+		t = gamma*t
+	print(x1 + t*dx1, x2 + t*dx2)
+	return t
 
-def gradiente(func, grad_func, x):
+
+#def gradiente(func, grad_func, x):
 #	k = 0
 #	x_ant = x
 #	while ((grad_func(x)!=0) || (x == x_ant)):
@@ -41,7 +45,7 @@ def gradiente(func, grad_func, x):
 #	return x
 
 
-def newton(func, grad_func, x):
+#def newton(func, grad_func, x):
 #	k = 0
 #	x_ant = x
 #	while ( (grad_func != 0) || (x_ant == x) ):
@@ -54,7 +58,7 @@ def newton(func, grad_func, x):
 #	return x
 
 
-def quaseNewton(func, grad_func, x):
+#def quaseNewton(func, grad_func, x):
 #	k = 0
 #	x_ant = x
 #	Hk = DEFINIR
@@ -66,12 +70,31 @@ def quaseNewton(func, grad_func, x):
 #		k = k + 1
 #		x_ant = x
 #		x = x_prox
+#	return x
 
-def Hk_prox(x, Hk):
+#def Hk_prox(x, Hk):
 	
 
+# Teste para a funcao de armijo, tudo ok
+def teste(x1, x2):
+	return (0.5)*pow( (x1 - 2) , 2) + pow( (x2 - 1) , 2)
 
-x1 = 2
-x2 = 5
+def grad_teste(x1, x2):
+	return [x1 - 2, 2*x2 - 2]
 
-fB(x1, x2)
+
+armijo(teste, grad_teste, 1, 0, 3, 1, 0.8, (0.25))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
