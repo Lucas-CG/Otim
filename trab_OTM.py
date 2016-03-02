@@ -51,7 +51,7 @@ def hess_fB(x1, x2):
 def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
 	t = 1
 	contador = 0
-	while func(x1 + t*dx1, x2 + t*dx2) > func(x1, x2) + eta*t*(grad_func(x1, x2)[0]*dx1 + grad_fA(x1, x2)[1]*dx2):
+	while func(x1 + t*dx1, x2 + t*dx2) > func(x1, x2) + eta*t*(grad_func(x1, x2)[0]*dx1 + grad_func(x1, x2)[1]*dx2):
 		t = gamma*t
 		contador+=1
 	return [t, contador]
@@ -59,31 +59,26 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 #Argumentos: funcao, gradiente da funcao, ponto x[x1, x2]
 def gradiente(func, grad_func, x1, x2):
 	k = 0
-	x1_ant = x1
-	x2_ant = x2
+	x = [x1, x2]
+	x_ant = x
 	x0 = [x1, x2]
-
 	contador = 0
 
-	while (((math.fabs(grad_func(x1, x2)[0])!=0) and (math.fabs(grad_func(x1, x2)[1])!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
+	#while (((math.fabs(grad_func(x1, x2)[0])!=0) and (math.fabs(grad_func(x1, x2)[1])!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
+	while ( grad_func != 0 ):
 		d = grad_func(x1, x2)
-		a = armijo(func, grad_func, x1, x2, -d[0], -d[1], _GAMMA_, _ETA_)
+		a = armijo(func, grad_func, x[0], x[1], -d[0], -d[1], _GAMMA_, _ETA_)
 		t = a[0]
 		call_armijo = a[1]
 
-		x1_prox = x1 + t*d[0]
-		x2_prox = x2 + t*d[1]
-
-		k = k+1
-
-		x1_ant = x1
-		x2_ant = x2
-		x1 = x1_prox
-		x2 = x2_prox
+		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
+		k = k + 1
+		x_ant = x
+		x = x_prox
+		if (x_ant == x):
+			break;
 		contador += 1
-
-		if contador == _ITER_:
-			break
+		
 
 	return [x0, contador, call_armijo, [x1, x2], func(x1, x2)]
 
@@ -99,7 +94,8 @@ def newton(func, grad_func, hess_func, x1, x2):
 		aux2 = [ [(-1) * value for value in aux1[0]], [(-1) * value for value in aux1[1]] ]
 		aux3 = grad_func(x[0], x[1])
 		d = m_MV(aux2, aux3)
-		a = armijo(func, grad_func, x1, x2, d[0], d[1], _GAMMA_, _ETA_)
+		a = armijo(func, grad_func, x[0], x[1], d[0], d[1], _GAMMA_, _ETA_)
+		print(a)
 		t = a[0]
 		call_armijo = a[1]
 		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
@@ -109,10 +105,8 @@ def newton(func, grad_func, hess_func, x1, x2):
 		if (x_ant == x):
 			break;
 		contador+=1
-		if contador == _ITER_:
-			break
 
-	return [x0, contador, call_armijo, x, func(x1, x2)]
+	return [x0, contador, call_armijo, x_prox, func(x_prox[0], x_prox[1])]
 
 
 def quaseNewton(func, grad_func, hessiana, x1, x2):
@@ -133,7 +127,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 
 		p = [x1_prox - x1, x2_prox - x2]
 		q = [(grad_func(x1_prox, x2_prox)[0] - grad_func(x1, x2)[0]), (grad_func(x1_prox, x2_prox)[1] - grad_func(x1, x2)[1])]
-
+		
 		aux1 = d_VV(m_VV((m_VM(q, Hk)), q), m_VV(p, q))
 		aux2 = [aux1[0] + 1, aux1[1] + 1]
 		aux3 = d_VV(m_VV( aux2, [m_VV(p, p), m_VV(p,q)]))
@@ -197,19 +191,19 @@ def invMatrix2x2(M):
 #x aqui é um vetor com x1 e x2
 # o otimo deve dar 0 no ponto (0, 0)
 
-#def testF(x1, x2):
-#	return pow(x1, 2) + 2 * pow(x2, 2)
+def testF(x1, x2):
+	return pow(x1, 2) + 2 * pow(x2, 2)
 
-#def grad_testF(x1, x2):
-#	return[2 * x1, 4 * x2]
+def grad_testF(x1, x2):
+	return[2 * x1, 4 * x2]
 
-#def hess_testF(x1, x2):
-#	return [[2, 0], [0, 4]]
+def hess_testF(x1, x2):
+	return [[2, 0], [0, 4]]
 
 
-#print( newton(testF, grad_testF, hess_testF, 7.5, 9 ) )
+print( newton(testF, grad_testF, hess_testF, 7.5, 9 ) )
 
 #FIM do teste para Newton
 
-
+#print( gradiente(testF, grad_testF, 7.5, 9 ) )
 #print(quaseNewton(fA, grad_fA, hess_fA, 1, 1))
