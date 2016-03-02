@@ -3,13 +3,13 @@ import math
 import numpy
 
 def fA (x1, x2):
-	return - math.exp( -pow(x1, 2) - pow(pow(x1, 2)- x2, 2) )
+	return - math.exp( (-1)*pow(x1, 2) - pow(pow(x1, 2) - x2, 2) )
 
 def fB (x1, x2):
-	return  math.sqrt( pow(x1,2) + pow(  (pow(x1,2) - x2), 2) )
+	return  math.sqrt( pow(x1, 2) + pow(  (pow(x1, 2) - x2), 2) )
 
 def grad_fA(x1, x2):
-	deriv_x1 = - ( 2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2 ) * fA(x1, x2)
+	deriv_x1 = (-1)*( 2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2 ) * fA(x1, x2)
 	deriv_x2 = 2 * ( pow(x1, 2) - x2 ) * fA(x1, x2)
 	return [deriv_x1, deriv_x2]
 
@@ -19,11 +19,11 @@ def grad_fB(x1, x2):
 	return [deriv_x1, deriv_x2]
 
 def hess_fA(x1, x2):
-	deriv_x1_x1 = -(2 + 12 * pow(x1, 2) - 4 * x2) * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA[0]
-	deriv_x1_x2 = 4 * x1 * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA[1]
+	deriv_x1_x1 = (-1)*(2 + 12 * pow(x1, 2) - 4 * x2) * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA(x1, x2)[0]
+	deriv_x1_x2 = 4 * x1 * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA(x1, x2)[1]
 
-	deriv_x2_x1 = 4 * x1 * fA(x1, x2) + 2 * (pow (x1, 2) - x2) * grad_fA[0]
-	deriv_x2_x2 = -2 * fA(x1, x2) + 2(pow(x1, 2) - x2) * grad_fA[1]
+	deriv_x2_x1 = 4 * x1 * fA(x1, x2) + 2 * (pow (x1, 2) - x2) * grad_fA(x1, x2)[0]
+	deriv_x2_x2 = (-1)*2 * fA(x1, x2) + 2 * (pow(x1, 2) - x2) * grad_fA(x1, x2)[1]
 
 	return [[deriv_x1_x1, deriv_x1_x2], [deriv_x2_x1, deriv_x2_x2]]
 
@@ -50,7 +50,6 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 	print (x1 + t*dx1, x2 + t*dx2)
 	return t
 
-
 #Argumentos: funcao, gradiente da funcao, ponto x[x1, x2]
 def gradiente(func, grad_func, x1, x2):
 	k = 0
@@ -59,7 +58,7 @@ def gradiente(func, grad_func, x1, x2):
 
 	contador = 0
 
-	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
+	while (((math.fabs(grad_func(x1, x2)[0])!=0) and (math.fabs(grad_func(x1, x2)[1])!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
 		d = grad_func(x1, x2)
 		t = armijo(func, grad_func, x1, x2, -d[0], -d[1], 0.8, 0.25)
 		
@@ -75,7 +74,7 @@ def gradiente(func, grad_func, x1, x2):
 		print ("gradiente", x1_ant, x2_ant, x1, x2)
 		contador += 1
 
-		if contador == 150:
+		if contador == 300:
 			break
 
 	return [x1, x2]
@@ -97,23 +96,24 @@ def newton(func, grad_func, hess_func, x):
 def quaseNewton(func, grad_func, hessiana, x1, x2):
 	k = 0
 	x1_ant = x1
-	x2_ant = X2
+	x2_ant = x2
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
 	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
-		d = m_MV( (hessiana(func, grad_func, x1, x2)), grad_func(x1, x2) ) 
-		t = armijo(func, grad_func, x1, x2, -d[0], -d[1], gamma, eta)
+		d = m_MV( (hessiana(x1, x2)), grad_func(x1, x2) ) 
+		t = armijo(func, grad_func, x1, x2, -d[0], -d[1], 0.8, 0.25)
 		x1_prox = x1 + t*d[0]
 		x2_prox = x2 + t*d[1]
-
 
 		p = [x1_prox - x1, x2_prox - x2]
 		q = [(grad_func(x1_prox, x2_prox)[0] - grad_func(x1, x2)[0]), (grad_func(x1_prox, x2_prox)[1] - grad_func(x1, x2)[1])]
 
-		parte1 = { 1 + [ m_VV((m_VM(q, Hk)), q) / m_VV(p, q) ] } * [m_VV(p, p) / m_VV(p,q)] 
-		parte2 = [ m_VM(m_VV(p,q), Hk) + mVV( m_MV(Hk,q), p) ] / [ m_VV(p,q)]
+		aux1 = m_VV((m_VM(q, Hk)), q) / m_VV(p, q)
+		aux2 = [aux1[0] + 1, aux1[1] + 1]
+		aux3 = m_VV( aux2, [m_VV(p, p) / m_VV(p,q)]) 
+		aux4 = [ m_VM(m_VV(p,q), Hk) + mVV( m_MV(Hk,q), p) ] / [ m_VV(p,q)]
 		
-		hess_Est = Hk + parte1 - parte2
+		hess_Est = Hk + aux3 - aux4
 		
 		Hk = hess_Est
 		k = k + 1
@@ -150,8 +150,20 @@ def grad_teste(x1, x2):
 	return [x1 - 2, 2*x2 - 2]
 #armijo(teste, grad_teste, 1, 0, 3, 1, 0.8, (0.25))
 
-def teste2(x1, x2):
-	return 3*pow(x1, 2) + 3*x1*x2 + 2*pow(x2, 2) + x1 + x2
-def grad_teste2(x1, x2):
-	return [(6*x1 + 3*x2 + 1), (3*x1 + 4*x2 +1)]
-print(gradiente(teste2, grad_teste2, 0, 1))
+
+print(quaseNewton(fA, grad_fA, hess_fA, 1, 1))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
