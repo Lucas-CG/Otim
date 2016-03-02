@@ -18,6 +18,25 @@ def grad_fB(x1, x2):
 	deriv_x2 = ( x2 - pow(x1, 2) ) / fB(x1, x2)
 	return [deriv_x1, deriv_x2]
 
+def hess_fA(x1, x2):
+	deriv_x1_x1 = -(2 + 12 * pow(x1, 2) - 4 * x2) * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA[0]
+	deriv_x1_x2 = 4 * x1 * fA(x1, x2) - (2 * x1 + 4 * pow(x1, 3) - 4 * x1 * x2) * grad_fA[1]
+
+	deriv_x2_x1 = 4 * x1 * fA(x1, x2) + 2 * (pow (x1, 2) - x2) * grad_fA[0]
+	deriv_x2_x2 = -2 * fA(x1, x2) + 2(pow(x1, 2) - x2) * grad_fA[1]
+
+	return [[deriv_x1_x1, deriv_x1_x2], [deriv_x2_x1, deriv_x2_x2]]
+
+
+def hess_fB(x1, x2):
+	deriv_x1_x1 = ( (1 + 6 * pow (x1, 2) - 2 * x2) * fB(x1, x2) - (x1 + 2 * pow(x1, 3) - 2 * x1 * x2) * grad_fB[0] ) / pow (fB(x1, x2), 2)
+	deriv_x1_x2 = (-2 * x1 * fB(x1, x2) - (x1 + 2 * pow(x1, 3) - 2 * x1 * x2) * grad_fB[1]) / pow(fB(x1, x2) , 2)
+	
+	deriv_x2_x1 = (-2 * x1 * fB(x1, x2) - (x2 - pow(x1, 2)) * grad_fB[0]) / pow(fB(x1, x2), 2)
+	deriv_x2_x2 = (fB(x1, x2) - (x2 - pow(x1, 2)) * grad_fB[1]) / pow(fB(x1, x2), 2)
+
+	return [[deriv_x1_x1, deriv_x1_x2], [deriv_x2_x1, deriv_x2_x2]]
+
 #busca de armijo: arumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
 def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
 	t = 1
@@ -36,9 +55,9 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 
 #	while (((grad_func(x1, x2)[0]!=0) && (grad_func(x1, x2)[1]!=0)) || ((x1 == x1_ant) && (x2 == x2_ant))):
 #		d = -(grad_func(x1, x2))
-		
+
 #		t = armijo(func, grad_func, x1, x2, d[0], d[1], gamma, eta)
-		
+
 #		x1_prox = x1 + t*d[0]
 #		x2_prox = x2 + t*d[1]
 
@@ -80,7 +99,7 @@ def quaseNewton(func, grad_func, x1, x2):
 
 		p = [x1_prox - x1, x2_prox - x2]
 		q = grad_func(x1_prox, x2_prox) - grad_func(x1, x2)
-		
+
 #		np.dot(v1, v2) -> multiplicacao de vetores
 #		hess_Est = Hk + { 1 + [(m_VetorMatriz(q, Hk))*q ]    }
 		k = k + 1
@@ -93,7 +112,7 @@ def m_MatrizVetor(m, v):
 	a = m[0][0]*v[0] + m[0][1]*v[1]
 	b = m[1][0]*v[0] + m[1][0]*v[1]
 	return [a, b]
-	
+
 #Argumentos: Vetor gradiente, matrix hessiana
 def m_VetorMatriz(v, m):
 	a = v[0]*m[0][0] + v[1]*m[1][0]
