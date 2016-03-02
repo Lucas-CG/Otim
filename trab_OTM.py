@@ -31,11 +31,16 @@ def hess_fA(x1, x2):
 def hess_fB(x1, x2):
 	deriv_x1_x1 = ( (1 + 6 * pow (x1, 2) - 2 * x2) * fB(x1, x2) - (x1 + 2 * pow(x1, 3) - 2 * x1 * x2) * grad_fB[0] ) / pow (fB(x1, x2), 2)
 	deriv_x1_x2 = (-2 * x1 * fB(x1, x2) - (x1 + 2 * pow(x1, 3) - 2 * x1 * x2) * grad_fB[1]) / pow(fB(x1, x2) , 2)
-	
+
 	deriv_x2_x1 = (-2 * x1 * fB(x1, x2) - (x2 - pow(x1, 2)) * grad_fB[0]) / pow(fB(x1, x2), 2)
 	deriv_x2_x2 = (fB(x1, x2) - (x2 - pow(x1, 2)) * grad_fB[1]) / pow(fB(x1, x2), 2)
 
 	return [[deriv_x1_x1, deriv_x1_x2], [deriv_x2_x1, deriv_x2_x2]]
+
+def invMatrix2x2(M):
+	det = M[0] * M[3] - M[1] * M[2]
+
+	return [[M[3] / det, -M[1] / det], [-M[2] / det, M[0] / det]]
 
 #busca de armijo: arumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
 def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
