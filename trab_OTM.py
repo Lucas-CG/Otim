@@ -42,7 +42,7 @@ def invMatrix2x2(M):
 
 	return [[M[3] / det, -M[1] / det], [-M[2] / det, M[0] / det]]
 
-#busca de armijo: arumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
+#busca de armijo: argumentos: funcao, gradiente da funcao, ponto x[x1, x2], direcao d[dx1, dx2], taxa de atualizacao de t (gamma)
 def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do passo
 	t = 1
 
@@ -76,27 +76,27 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 #	return [x1, x2]
 
 
-#def newton(func, grad_func, x):
-#	k = 0
-#	x_ant = x
-#	while ( (grad_func != 0) || (x_ant == x) ):
-#		d = -(inv_hess(x)) * grad_func(x)
-#		t = armijo(func, x, d, grad_func)
-#		x_prox = x + t*d
-#		k = k + 1
-#		x_ant = x
-#		x = x_prox
-#	return x
+def newton(func, grad_func, hess_func, x):
+	k = 0
+	x_ant = x
+	while ( (grad_func != 0) and (x_ant != x) ):
+		d = -invMatrix2x2(hess_func(x)) * grad_func(x)
+		t = armijo(func, x, d, grad_func)
+		x_prox = x + t*d
+		k = k + 1
+		x_ant = x
+		x = x_prox
+	return x
 
 
-def quaseNewton(func, grad_func, x1, x2):
+def quaseNewton(func, grad_func, hess_func, x1, x2):
 	k = 0
 	x1_ant = x1
 	x2_ant = X2
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
 	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
-		d = - (m_MatrizVetor( (hessiana(func, grad_func, x1, x2)), grad_func(x1, x2) ) )
+		d = - (m_MatrizVetor( (hess_func(x1, x2)), grad_func(x1, x2) ) )
 		t = armijo(func, grad_func, x1, x2, d[0], d[1], gamma, eta)
 		x1_prox = x1 + t*d[0]
 		x2_prox = x2 + t*d[1]
