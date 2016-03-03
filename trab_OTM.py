@@ -1,5 +1,13 @@
 # coding=utf-8
 
+
+#EI!
+#Me lembrei de uma coisa: o numero de calls do armijo eh o total entre todas as iterações ou so na
+#iteracao final? Na duvida, criei uma variavel que salva as chamadas de todas as iteracoes...
+
+#Outra coisa a se notar: aquelas divisoes de vetor voltaram... vamos ter que consertar isso no quase-newton.
+#Fiz umas funcoes de transposicao que podem facilitar
+
 import sys
 import math
 import numpy
@@ -66,19 +74,20 @@ def armijo(func, grad_func, x1, x2, dx1, dx2, gamma, eta): #retorno: tamanho do 
 #Argumentos: funcao, gradiente da funcao, ponto x[x1, x2]
 def gradiente(func, grad_func, x1, x2):
 	global _GAMMA_
-	k = 0
 	x = [x1, x2]
 	x_ant = x
 	x_0 = [x1, x2]
 	contador = 0
+	total_calls_armijo = 0
 
 	while ( norma(grad_func(x[0], x[1])) > _TOLERANCIA_ and contador < _ITER_ ):
 		d = [(-1) * value for value in grad_func(x[0], x[1])]
 		a = armijo(func, grad_func, x[0], x[1], d[0], d[1], _GAMMA_, _ETA_)
 		t = a[0]
 		call_armijo = a[1]
+		total_calls_armijo += call_armijo
+
 		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
-		k = k + 1
 		x_ant = x
 		x = x_prox
 		contador += 1
@@ -88,21 +97,23 @@ def gradiente(func, grad_func, x1, x2):
 
 	if(contador==_ITER_):
 		print("Numero maximo de iteracoes")
-	return [x_0, contador, call_armijo, x, func(x[0], x[1])]
+	return [x_0, contador, total_calls_armijo, x, func(x[0], x[1])]
 
 
 def newton(func, grad_func, hess_func, x1, x2):
-	k = 0
+	
 	contador = 0
 	x0 = [x1, x2]
 	x = [x1, x2]
 	x_ant = x
-	while ( (grad_func != 0) ):
+	total_calls_armijo = 0
+
+	while ( ( norma(grad_func(x[0], x[1]) ) > _TOLERANCIA_ and contador < _ITER_) ):
 		aux1 = invMatrix2x2( hess_func(x[0], x[1]) )
-		if (aux1 == -1): #se a matriz for singular, a função de inversa retorna -1
-			call_armijo = 0
+		if (aux1 is None): #se a matriz for singular, não ha inversa
 			x_prox = x
 			break;
+
 		aux2 = [ [(-1) * value for value in aux1[0]], [(-1) * value for value in aux1[1]] ]
 		aux3 = grad_func(x[0], x[1])
 		d = m_MV(aux2, aux3)
@@ -110,15 +121,21 @@ def newton(func, grad_func, hess_func, x1, x2):
 		print(a)
 		t = a[0]
 		call_armijo = a[1]
+		total_calls_armijo += call_armijo
+
 		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
-		k = k + 1
 		x_ant = x
 		x = x_prox
-		if (x_ant == x):
-			break;
+
 		contador+=1
 
-	return [x0, contador, call_armijo, x_prox, func(x_prox[0], x_prox[1])]
+		if (x_ant == x):
+			break;
+
+	if (contador == _ITER_):
+		print ("Numero maximo de iteracoes")
+
+	return [x0, contador, total_calls_armijo, x_prox, func(x_prox[0], x_prox[1])]
 
 
 def quaseNewton(func, grad_func, hessiana, x1, x2):
@@ -127,6 +144,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 	x2_ant = x2
 	x0 = [x1, x2]
 	contador = 0
+	total_calls_armijo = 0
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
 	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
@@ -134,6 +152,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 		a = armijo(func, grad_func, x1, x2, -d[0], -d[1], 0.8, 0.25)
 		t = a[0]
 		call_armijo = a[1]
+		total_calls_armijo += call_armijo
 		x1_prox = x1 + t*d[0]
 		x2_prox = x2 + t*d[1]
 
@@ -156,7 +175,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 		x2 = x2_prox
 		contador+=1
 
-	return [x0, contador, call_armijo, [x1, x2], func(x1, x2)]
+	return [x0, contador, total_calls_armijo, [x1, x2], func(x1, x2)]
 
 #Multiplicacao Matriz2x2 x Vetor
 def m_MV(m, v):
@@ -184,17 +203,28 @@ def s_VV(v1, v2):
 
 #inversa
 def invMatrix2x2(M):
-	try:
-		det = M[0][0] * M[1][1] - M[0][1] * M[1][0]
-		return [[M[1][1] / det, -M[0][1] / det], [-M[1][0] / det, M[0][0] / det]]
 
-	except ZeroDivisionError: #isso acontece na primeira função pro Newton
-		print("Matriz singular")
-		print(M)
-		return -1
+	det = M[0][0] * M[1][1] - M[0][1] * M[1][0]
+
+	if det == 0:
+		return None
+
+	return [[M[1][1] / det, -M[0][1] / det], [-M[1][0] / det, M[0][0] / det]]
 
 def norma(v):
 	return math.sqrt( v[0]**2 + v[1]**2 )
+
+def vetorTransposto(v):
+	return [[v[0]], [v[1]]]
+
+def matrizTransposta(M):
+	return [ [M[0][0], M[1][0]], [M[0][1], M[1][1] ] ]
+
+def ePositivaDefinida(M):
+	testVec = [1, 1]
+	prod1 = m_VM(testVec, M)
+	prod2 = m_VV(prod1, transpostaVetor(testVec) )
+	return (prod2[0] > 0) and (prod2[1] > 0)
 
 #-----------Codigo principal------------
 
