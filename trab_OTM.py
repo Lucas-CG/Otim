@@ -144,19 +144,20 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 		a = armijo(func, grad_func, x1, x2, -d[0], -d[1], 0.8, 0.25)
 		t = a[0]
 		call_armijo = a[1]
-		total_calls_armijo += call_armijo
 		x1_prox = x1 + t*d[0]
 		x2_prox = x2 + t*d[1]
 
 		p = [x1_prox - x1, x2_prox - x2]
 		q = [(grad_func(x1_prox, x2_prox)[0] - grad_func(x1, x2)[0]), (grad_func(x1_prox, x2_prox)[1] - grad_func(x1, x2)[1])]
 
-		aux1 = d_VV(m_VV((m_VM(q, Hk)), q), m_VV(p, q))
-		aux2 = [aux1[0] + 1, aux1[1] + 1]
-		aux3 = d_VV(m_VV( aux2, [m_VV(p, p), m_VV(p,q)]))
-		aux4 = d_VV(s_VV(m_VM(m_VV(p,q), Hk), mVV( m_MV(Hk,q), p)), [ m_VV(p,q)])
+		aux1 = 1 + int( (m_VV((m_VM(q, Hk)), q) / m_VV(p, q)) )
+		aux2 = aux1 / m_VV(p,q)
+		aux3 = [ [(aux2) * value for value in m_VVT(p,p)[0]], [aux2 * value for value in m_VVT(p,p)[1]] ]  
+		aux4 = s_MM(m_MM( m_VVT(p, q), Hk), m_VVT(m_MV(Hk, q), p))
+		aux5 = m_VV(p,q)
+		aux6 = [ [((-1)*value/aux5) for value in aux4[0]], [ ((-1)*value/aux5) for value in aux4[1] ] ]  
 
-		hess_Est = Hk + aux3 - aux4
+		hess_Est = s_MM(s_MM(Hk, aux3), aux6)
 
 		Hk = hess_Est
 		k = k + 1
@@ -183,11 +184,16 @@ def m_VM(v, m):
 
 #Multiplicacao Vetor x Vetor
 def m_VV (v1, v2):
-	return [v1[0]*v2[0], v1[1]*v2[1]]
+	return v1[0]*v2[0] + v1[1]*v2[1]
 
-#Dividindo Vetor / Vetor
-def d_VV(v1, v2):
-	return[v1[0]/v2[0], v1[1]/v2[1]]
+def m_VVT (v1, v2):
+	return [[v1[0]*v2[0], v1[0]*v2[1]], [v1[1]*v2[0], v1[1]*v2[1]]]
+
+def m_MM(m1, m2):
+	return [ [ m1[0][0]*m2[0][0] + m1[0][1]*m2[1][0], m1[0][0]*m2[0][1] + m1[0][1]*m2[1][1] ], [ m1[1][0]*m2[0][0] + m1[1][1]*m2[1][0], m1[1][0]*m2[0][1] + m1[1][1]*m2[1][1] ] ]
+
+def s_MM(m1, m2):
+	return [ [ m1[0][0]+m2[0][0], m1[0][1]+m2[0][1] ], [ m1[1][0]+m2[1][0], m1[1][1]+m2[1][1] ] ]
 
 #Somando Vetor + Vetor
 def s_VV(v1, v2):
@@ -259,6 +265,6 @@ def hess_testF(x1, x2):
 
 #print( gradiente(fB, grad_fB, 0.1, 1 ) )
 
-#print(quaseNewton(fA, grad_fA, hess_fA, 1, 1))
+print(quaseNewton(fA, grad_fA, hess_fA, 2, 3))
 
 
