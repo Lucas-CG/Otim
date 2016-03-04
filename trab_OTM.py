@@ -1,10 +1,6 @@
 # coding=utf-8
 
 
-#EI!
-#Me lembrei de uma coisa: o numero de calls do armijo eh o total entre todas as iterações ou so na
-#iteracao final? Na duvida, criei uma variavel que salva as chamadas de todas as iteracoes...
-
 #Outra coisa a se notar: aquelas divisoes de vetor voltaram... vamos ter que consertar isso no quase-newton.
 #Fiz umas funcoes de transposicao que podem facilitar
 
@@ -78,14 +74,12 @@ def gradiente(func, grad_func, x1, x2):
 	x_ant = x
 	x_0 = [x1, x2]
 	contador = 0
-	total_calls_armijo = 0
 
 	while ( norma(grad_func(x[0], x[1])) > _TOLERANCIA_ and contador < _ITER_ ):
 		d = [(-1) * value for value in grad_func(x[0], x[1])]
 		a = armijo(func, grad_func, x[0], x[1], d[0], d[1], _GAMMA_, _ETA_)
 		t = a[0]
 		call_armijo = a[1]
-		total_calls_armijo += call_armijo
 
 		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
 		x_ant = x
@@ -97,7 +91,7 @@ def gradiente(func, grad_func, x1, x2):
 
 	if(contador==_ITER_):
 		print("Numero maximo de iteracoes")
-	return [x_0, contador, total_calls_armijo, x, func(x[0], x[1])]
+	return [x_0, contador, call_armijo, x, func(x[0], x[1])]
 
 
 def newton(func, grad_func, hess_func, x1, x2):
@@ -106,7 +100,6 @@ def newton(func, grad_func, hess_func, x1, x2):
 	x0 = [x1, x2]
 	x = [x1, x2]
 	x_ant = x
-	total_calls_armijo = 0
 
 	while ( ( norma(grad_func(x[0], x[1]) ) > _TOLERANCIA_ and contador < _ITER_) ):
 		aux1 = invMatrix2x2( hess_func(x[0], x[1]) )
@@ -121,7 +114,6 @@ def newton(func, grad_func, hess_func, x1, x2):
 		print(a)
 		t = a[0]
 		call_armijo = a[1]
-		total_calls_armijo += call_armijo
 
 		x_prox = [x[0] + t*d[0], x[1] + t*d[1]]
 		x_ant = x
@@ -135,7 +127,7 @@ def newton(func, grad_func, hess_func, x1, x2):
 	if (contador == _ITER_):
 		print ("Numero maximo de iteracoes")
 
-	return [x0, contador, total_calls_armijo, x_prox, func(x_prox[0], x_prox[1])]
+	return [x0, contador, call_armijo, x_prox, func(x_prox[0], x_prox[1])]
 
 
 def quaseNewton(func, grad_func, hessiana, x1, x2):
@@ -144,7 +136,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 	x2_ant = x2
 	x0 = [x1, x2]
 	contador = 0
-	total_calls_armijo = 0
+
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
 	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
@@ -175,7 +167,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 		x2 = x2_prox
 		contador+=1
 
-	return [x0, contador, total_calls_armijo, [x1, x2], func(x1, x2)]
+	return [x0, contador, call_armijo, [x1, x2], func(x1, x2)]
 
 #Multiplicacao Matriz2x2 x Vetor
 def m_MV(m, v):
@@ -201,10 +193,13 @@ def d_VV(v1, v2):
 def s_VV(v1, v2):
 	return [v1[0]+v2[0], v1[1]+v2[1]]
 
+def determinante(M):
+	return M[0][0] * M[1][1] - M[0][1] * M[1][0]
+
 #inversa
 def invMatrix2x2(M):
 
-	det = M[0][0] * M[1][1] - M[0][1] * M[1][0]
+	det = determinante(M)
 
 	if det == 0:
 		return None
@@ -212,7 +207,7 @@ def invMatrix2x2(M):
 	return [[M[1][1] / det, -M[0][1] / det], [-M[1][0] / det, M[0][0] / det]]
 
 def norma(v):
-	return math.sqrt( v[0]**2 + v[1]**2 )
+	return math.sqrt( v[0] ** 2 + v[1] ** 2 )
 
 def vetorTransposto(v):
 	return [[v[0]], [v[1]]]
@@ -220,11 +215,14 @@ def vetorTransposto(v):
 def matrizTransposta(M):
 	return [ [M[0][0], M[1][0]], [M[0][1], M[1][1] ] ]
 
+def autovalores(M):
+	av1 = ( (M[0][0] + M[1][1]) + math.sqrt( (M[0][0] + M[1][1]) ** 2 - 4 * determinante(M) ) ) / 2
+	av2 = ( (M[0][0] + M[1][1]) - math.sqrt( (M[0][0] + M[1][1]) ** 2 - 4 * determinante(M) ) ) / 2
+
+	return [av1, av2]
+
 def ePositivaDefinida(M):
-	testVec = [1, 1]
-	prod1 = m_VM(testVec, M)
-	prod2 = m_VV(prod1, transpostaVetor(testVec) )
-	return (prod2[0] > 0) and (prod2[1] > 0)
+	return (autovalores(M)[0] > 0) and (autovalores(M)[1] > 0)
 
 #-----------Codigo principal------------
 
@@ -254,7 +252,7 @@ def hess_testF(x1, x2):
 #print( newton(testF, grad_testF, hess_testF, 7.5, 9 ) )
 #print( gradiente(testF, grad_testF, 7.5, 9 ) )
 
-print( quaseNewton(testF, grad_testF, hess_testF, 1, 1 ) )
+#print( quaseNewton(testF, grad_testF, hess_testF, 1, 1 ) )
 #print( newton(fB, grad_fB, hess_fB, 7.5, 9 ) )
 
 #FIM do teste para Newton
@@ -262,3 +260,5 @@ print( quaseNewton(testF, grad_testF, hess_testF, 1, 1 ) )
 #print( gradiente(fB, grad_fB, 0.1, 1 ) )
 
 #print(quaseNewton(fA, grad_fA, hess_fA, 1, 1))
+
+
