@@ -139,7 +139,7 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
-	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
+	while (norma(grad_func(x1,x2) ) > _TOLERANCIA_ ) or ((x1 == x1_ant) and (x2 == x2_ant)):
 		aux0 = m_MV( Hk, grad_func(x1, x2) )
 		print("Hk= ", Hk)
 		print("grad= ", grad_func(x1, x2))
@@ -154,6 +154,9 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 
 		p = [x1_prox - x1, x2_prox - x2]
 		q = [(grad_func(x1_prox, x2_prox)[0] - grad_func(x1, x2)[0]), (grad_func(x1_prox, x2_prox)[1] - grad_func(x1, x2)[1])]
+		print ("p= ", p)
+		print ("q= ", q)
+
 		print(t, d)
 		aux1 = 1 + int( (m_VV((m_VM(q, Hk)), q) / m_VV(p, q)) )
 		aux2 = aux1 / m_VV(p,q)
@@ -270,6 +273,6 @@ def hess_testF(x1, x2):
 
 #print( gradiente(fB, grad_fB, 0.1, 1 ) )
 
-print(quaseNewton(fA, grad_fA, hess_fA, 5, 50))
+print(quaseNewton(fA, grad_fA, hess_fA, 30, 60))
 
 
