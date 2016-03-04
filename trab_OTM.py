@@ -140,11 +140,15 @@ def quaseNewton(func, grad_func, hessiana, x1, x2):
 	#Para a primeira iteracao definimos Hk = Identidade
 	Hk = [[1, 0], [0, 1]]
 	while (((grad_func(x1, x2)[0]!=0) and (grad_func(x1, x2)[1]!=0)) or ((x1 == x1_ant) and (x2 == x2_ant))):
-		aux0 = m_MV( (hessiana(x1, x2)), grad_func(x1, x2) )
+		aux0 = m_MV( Hk, grad_func(x1, x2) )
+		print("Hk= ", Hk)
+		print("grad= ", grad_func(x1, x2))
 		d = [(-1) * value for value in aux0]
-		a = armijo(func, grad_func, x1, x2, d[0], d[1], 0.8, 0.25)
+		print ("d= ", d)
+		a = armijo(func, grad_func, x1, x2, d[0], d[1], _GAMMA_, _ETA_)
 		t = a[0]
 		call_armijo = a[1]
+		print(a)
 		x1_prox = x1 + t*d[0]
 		x2_prox = x2 + t*d[1]
 
